@@ -16,7 +16,7 @@ const Header = () => {
             <button type="submit" className='bg-primary text-white px-8 m-1.5 rounded hover:scale-105 transition-all cursor-pointer py-2'>Search</button>
           </form>
         </div>
-        <img src='bg.png' alt='Background' className='absolute opacity-20 -top-50 -z-1' />
+        <img src='/bg.png' alt='Background' className='absolute opacity-20 -top-50 -z-1' />
       
     </div>
   )

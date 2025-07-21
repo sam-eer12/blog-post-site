@@ -6,7 +6,7 @@ const Fotter = () => {
     <div className='px-6 md:px-16 lg:px-24 xl:px-32 bg-primary/3'>
       <div className='flex flex-col md:flex-row items-start justify-between py-10 gap-10 border-b border-gray-500/30 text-gray-500'>
         <div>
-            <img src='image.png' alt='Logo' className='w-40 sm:w-48' />
+            <img src='/image.png' alt='Logo' className='w-40 sm:w-48' />
             <p className='mt-6 max-w-[400px] text-sm'>Amethyst Wave is your go-to platform for insightful blogs and engaging content. Join us in exploring the world of ideas and creativity.</p>
         </div>
         <div className='flex flex-wrap justify-between w-full md:w-[45%] gap-5'>
