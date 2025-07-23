@@ -1,4 +1,3 @@
-import fs from 'fs';
 import imagekit from '../configs/imagekit.js';
 import Blog from '../models/blog.js';
 import Comment from '../models/comment.js';
@@ -10,7 +9,7 @@ export const addBlog = async (req, res) => {
     try {
         console.log('Add blog request received');
         console.log('Request body:', req.body);
-        console.log('Request file:', req.file);
+        console.log('Request file:', req.file ? 'File received' : 'No file');
         
         if (!req.body.blog) {
             return res.status(400).json({success: false, message: "No blog data provided"});
@@ -32,17 +31,11 @@ export const addBlog = async (req, res) => {
             return res.status(400).json({success: false, message: "Please fill all the required fields"});
         }    
         
-        console.log('Reading file:', imageFile.path);
-        if (!fs.existsSync(imageFile.path)) {
-            return res.status(400).json({success: false, message: "Uploaded file not found"});
-        }
-
-        const filebuffer = fs.readFileSync(imageFile.path);
-
         console.log('Uploading to ImageKit...');
+        // Use the buffer directly from memory storage
         const response = await imagekit.upload({
-            file: filebuffer,
-            fileName: imageFile.originalname,
+            file: imageFile.buffer, // Use buffer instead of reading from file system
+            fileName: imageFile.originalname || `blog-image-${Date.now()}`,
             folder: "/blogs",
         });
 
@@ -69,17 +62,11 @@ export const addBlog = async (req, res) => {
         });
 
         console.log('Blog created successfully:', newBlog._id);
-        
-        // Clean up uploaded file
-        try {
-            fs.unlinkSync(imageFile.path);
-        } catch (unlinkError) {
-            console.log('Error deleting temporary file:', unlinkError.message);
-        }
 
         res.status(201).json({ success: true, message: "Blog added successfully" });
     } catch (error) {
         console.error('Error adding blog:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({ success: false, message: "Error adding blog", error: error.message });
     }
 };
