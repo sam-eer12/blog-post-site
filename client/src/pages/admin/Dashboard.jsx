@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { assets, dashboard_data } from '../../assets/assets'
 
 import BlogTableItem from '../../components/admin/BlogTableItem';
+import { useAppContext } from '../../context/AppContext';
+
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
 
@@ -11,13 +14,35 @@ const Dashboard = () => {
     drafts:0,
     recentBlogs:[]
   })
+
+  const {axios, token} = useAppContext();
   const fetchDashboardData = async () => {
-    setDasboardData(dashboard_data)
+    try {
+      console.log('Fetching dashboard data...');
+      const {data} = await axios.get('/api/admin/dashboard');
+      console.log('Dashboard response:', data);
+      
+      if (data.success) {
+        setDasboardData({
+          blogs: data.blogs,
+          comments: data.comments,
+          drafts: data.drafts,
+          recentBlogs: data.recentBlogs
+        });
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error(error.response?.data?.message || "Error fetching dashboard data");
+    }
   }
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [])
+    if (token) {
+      fetchDashboardData();
+    }
+  }, [token])
   return (
     <div className='p-6 flex-1 h-[calc(100vh-70px)] ms:p-10 bg-blue-50/50'>
       <div className='flex flex-wrap gap-4 '>

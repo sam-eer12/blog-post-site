@@ -4,10 +4,15 @@ import { blog_data, comments_data, assets } from '../assets/assets';
 import Navbar from '../components/Navbar';
 import Fotter from '../components/Fotter';
 import Loader from '../components/Loader';
+import { useAppContext } from '../context/AppContext';
+import toast from 'react-hot-toast';
 
 const Blog = () => {
 
   const {id}= useParams()
+
+  const {axios} = useAppContext();
+
 
   const [data,setData] =useState(null);
 
@@ -16,20 +21,67 @@ const Blog = () => {
   const [content, setContent] = useState('');
 
   const fetchData = async () => {
-    const data =blog_data.find(item =>item._id===id)
-    setData(data)
+    try{
+      console.log('Fetching blog data for ID:', id);
+      const {data} = await axios.get(`/api/blog/${id}`);
+      console.log('Blog data response:', data);
+      data.success ? setData(data.blog) : toast.error(data.message);
+      
+    }catch (error) {
+      console.error("Error fetching blog data:", error);
+      toast.error(error.response?.data?.message || "Error fetching blog data");
+    }
   }
   const fetchComments = async () =>{
-    setcomments(comments_data)
+    try{
+      console.log('Fetching comments for blog ID:', id);
+      const {data} = await axios.post('/api/blog/comments', {blogId: id});
+      console.log('Comments response:', data);
+      if (data.success) {
+        setcomments(data.comments);
+        console.log('Comments fetched:', data.comments.length);
+      } else{
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      toast.error(error.response?.data?.message || "Error fetching comments");
+    }
   }
 
   const addComment = async (e) => {
     e.preventDefault();
+    
+    if (!name.trim() || !content.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    
+    try{
+      console.log('Adding comment for blog ID:', id);
+      const {data} = await axios.post('/api/blog/add-comment',{blog:id,name:name.trim(),content:content.trim()})
+      console.log('Add comment response:', data);
+      
+      if (data.success) {
+        toast.success(data.message);
+        setName('');
+        setContent('');
+        // Refresh comments after adding
+        fetchComments();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast.error(error.response?.data?.message || "Error adding comment");
+    }
   }
   useEffect(() => {
-    fetchData();
-    fetchComments();
-  }, [])
+    if (id) {
+      fetchData();
+      fetchComments();
+    }
+  }, [id])
   return data ? (
     <div className='relative'>
       <Navbar />

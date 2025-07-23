@@ -1,8 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { assets, blogCategories } from '../../assets/assets'
 import Quill from 'quill';
+import { useAppContext } from '../../context/AppContext';
+import toast from 'react-hot-toast';
+import {parse} from 'marked';
 
 const Addblog = () => {
+
+  const {axios} = useAppContext();
+  const [isAdding, setIsAdding] = useState(false);
+  const [loading, setLoading] = useState(false);
   const editorRef = useRef(null);
   const quillRef = useRef(null);
 
@@ -13,11 +20,56 @@ const Addblog = () => {
   const [isPublished, setIsPublished] = useState(false);
 
   const generateContent= async (e)=>{
-
+    if(!title) return toast.error('Please enter a title before generating content');
+    try {
+      setLoading(true)
+      const {data} = await axios.post('/api/blog/generate',{prompt:title})
+      if (data.success) {
+        quillRef.current.root.innerHTML = parse(data.content);
+        toast.success('Content generated successfully');
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error('Error generating content:', error);
+      toast.error('Error generating content');
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const onSubmitHandler = (e) => {
-    e.preventDefault();
+  const onSubmitHandler = async (e) => { 
+    try{
+      e.preventDefault();
+      setIsAdding(true);
+      const blog = {
+        title,
+        subTitle,
+        description: quillRef.current.root.innerHTML,
+        category,
+        isPublished
+      }
+      const formData = new FormData();
+      formData.append('blog',JSON.stringify(blog));
+      formData.append('image', image);
+
+      const {data} = await axios.post('/api/blog/add', formData);
+     if (data.success){
+      toast.success(data.message);
+      setImage(false);
+      setTitle('');
+      quillRef.current.root.innerHTML = '';
+      setCategory('Startup');
+      
+     }else{
+      toast.error(data.message);
+     }
+      
+    } catch (error) {
+      console.error("Error generating content:", error);
+    } finally {
+      setIsAdding(false);
+    }
   }
   useEffect(()=>{
     if(!quillRef.current && editorRef.current) {
@@ -50,13 +102,18 @@ const Addblog = () => {
         <p className='mt-4'>Blog description</p>
         <div className='max-w-lg h-74 pb-16 sm:pb-10 pt-2 relative'>
           <div ref={editorRef}></div>
-          <button onClick={generateContent} type='button' className=' absolute bottom-1 right-2 ml-2 text-xs text-white bg-black/70 px-4 py-1.5 rounded hover:undeline cursor-pointer'>
+          {loading && (
+            <div className='absolute right-0 top-0 bottom-0 left-0 flex items-center justify-center bg-black/10 mt-2'>
+              <div className='w-8 h-8 rounded-full border-2 border-t-white animate-spin'></div>
+
+            </div>)}
+          <button disabled={loading} onClick={generateContent} type='button' className=' absolute bottom-1 right-2 ml-2 text-xs text-white bg-black/70 px-4 py-1.5 rounded hover:undeline cursor-pointer'>
             Generate with AI
           </button>
         </div>
         <p className='mt-4'>Category</p>
         <select onChange={e => setCategory(e.target.value)} name="category" className='mt-2 px-3 py-2 border text-gray-500 border-gray-300 outline-none rounded'>
-          <option value="">Startup</option>
+          <option value="">Select an Option</option>
           {blogCategories.map((category, index) => (
             <option key={index} value={category}>{category}</option>
           ))}
@@ -65,7 +122,7 @@ const Addblog = () => {
           <p>Publish Now</p>
           <input type="checkbox" className='scale-125 cursor-pointer' checked={isPublished} onChange={e => setIsPublished(e.target.checked)} />
         </div>
-        <button type='submit' className='mt-6 bg-primary text-white px-8 py-2 rounded hover:scale-102 cursor-pointer transition-all'>Add Blog</button>
+        <button disabled={isAdding} type='submit' className='mt-6 bg-primary text-white px-8 py-2 rounded hover:scale-102 cursor-pointer transition-all'>{isAdding ? 'Adding...' : 'Add Blog'}</button>
       </div>
     </form>
   )

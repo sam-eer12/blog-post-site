@@ -1,16 +1,44 @@
 import React, { useEffect, useState } from 'react'
 import { blog_data } from '../../assets/assets';
 import BlogTableItem from '../../components/admin/BlogTableItem';
+import { useAppContext } from '../../context/AppContext';
+import toast from 'react-hot-toast';
 
 
 const Listblog = () => {
   const [blogs, setBlogs] = useState([]);
+  const {axios, token} = useAppContext();
+  
   const fetchBlogs = async () => {
-    setBlogs(blog_data)
+    try {
+      console.log('Fetching admin blogs with token:', token ? 'Present' : 'Missing');
+      const {data} = await axios.get('/api/admin/blogs');
+      console.log('Admin blogs response:', data);
+      
+      if (data.success) {
+        // Server returns 'blog' property, not 'blogs'
+        setBlogs(data.blog || []);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+      if (error.response?.status === 401) {
+        toast.error("Unauthorized. Please login again.");
+      } else {
+        toast.error(error.response?.data?.message || "Error fetching blogs");
+      }
+    }
   };
   useEffect(() => {
-    fetchBlogs();
-  }, []);
+    console.log('Listblog component mounted, token:', token);
+    if (token) {
+      console.log('Token available, fetching blogs...');
+      fetchBlogs();
+    } else {
+      console.log('No token available, waiting...');
+    }
+  }, [token]);
   return (
     <div className='flex-1 pt-5 px-5 sm:pt-12 sm:pl-16 bg-gray-50'>
       <div className='max-w-6xl mx-auto h-full flex flex-col'>
