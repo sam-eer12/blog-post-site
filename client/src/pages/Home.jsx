@@ -7,12 +7,21 @@ import Fotter from '../components/Fotter';
 
 const Home = () => {
   return (
+<<<<<<< Updated upstream
     <div >
         <Navbar />
         <Header />
         <BlogList />
         <NewsLetter />
         <Fotter />
+=======
+    <div>
+      <Navbar />
+      <Header />
+      <BlogList />
+      <NewsLetter />
+      <Fotter />
+>>>>>>> Stashed changes
     </div>
   )
 }
