@@ -7,7 +7,7 @@ import Fotter from '../components/Fotter';
 
 const Home = () => {
   return (
-    <div className="container pt-3">
+    <div >
         <Navbar />
         <Header />
         <BlogList />
